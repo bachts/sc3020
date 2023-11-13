@@ -34,14 +34,15 @@ def extract_table_names(query):
       Input: A SQL Query
       Returns: A list of table names'''
   parser = Parser(query)
-  
+
   relations = parser.tables
+  # print(relations)
   aliases = parser.tables_aliases
-  
+  # print(aliases)
   for k, v in zip(aliases.keys(), aliases.values()):
     
     for i in range(len(relations)):
-      if relations[i]==v:
+      if relations[i]==v and k!='where':
         relations[i] = k
         break;
   
@@ -50,7 +51,9 @@ def extract_table_names(query):
   
 def ctid_query(query):
   '''Extract block and position in block using ctid'''
+  
   selected_index = query.find('SELECT')
+ 
   relations = extract_table_names(query)
   modified_query="SELECT "
   
@@ -58,8 +61,8 @@ def ctid_query(query):
   for relation in relations:
     modified_query+=f"{relation}.ctid,"
     print(modified_query)
-  modified_query+=query[selected_index+len('SELECT')+1:]
-  # print(modified_query)
+  modified_query+=query[selected_index+len('SELECT')+2:]
+  print(modified_query)
   return modified_query
 
 def explain_analyze(query):
