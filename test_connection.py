@@ -1,6 +1,7 @@
 import psycopg2
 import explore
 import json
+import sql_metadata
 
 db_name = 'TPC-H'
 user = 'postgres'
@@ -26,7 +27,7 @@ cur = conn.cursor()
 #   cur.execute('explain ' + query)
 
 # rows = cur.fetchall()
-tables = explore.get_tables(cur)
+tables = explore.get_database_tables(cur)
 for table in tables.keys():
   print(table)
   for col in tables[table]:
@@ -35,14 +36,11 @@ for table in tables.keys():
 
 
 # print(tables)
-query = input('Enter your query here: ')
-while query!='q':
-  cur.execute('explain (analyze, buffers, format json) ' + query)
-  all = cur.fetchone()
-  print(all[0][0])
-  json_string = json.dumps(all[0][0], indent=2)
-  query = input()
-  
-print(json_string)
+
+# print(explore.process(cur, query='select * from region, nation where r_regionkey = n_nationkey;'))
+a, b = explore.process(cur, query='select * from region as RRR;')
+print(a)
+print(b)
+
 conn.commit()
 conn.close()

@@ -1,5 +1,6 @@
 import psycopg2
-
+import json
+from sql_metadata import Parser
 
 def get_database_tables(cursor):
   ''' Return all tables in the schema and their column names and data types'''
@@ -29,52 +30,36 @@ def get_database_tables(cursor):
 
 def extract_table_names(query):
   
-    ''' Return all relations used in a SQL query statement
-        Input: A SQL Query'''
-    query = query.replace(";"," ")
-    query = query.replace(","," ")
-    import re
-    relation_names = ['nation', 'customer', 'orders', 
-                      'lineitem', 'part', 'supplier', 
-                      'region', 'partsupp']
-    print(query)
+  ''' Return all relations used in a SQL query statement
+      Input: A SQL Query
+      Returns: A list of table names'''
+  parser = Parser(query)
+  
+  relations = parser.tables
+  aliases = parser.tables_aliases
+  
+  for k, v in zip(aliases.keys(), aliases.values()):
     
-    sql_keywords = [
-    'SELECT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'JOIN',
-    'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'OUTER JOIN', 'ON', 'AS',
-    'DISTINCT', 'UNION', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET',
-    'DELETE', 'CREATE', 'TABLE', 'ALTER', 'ADD', 'DROP', 'INDEX',
-    'CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'REFERENCES', 'CASCADE',
-    'TRUNCATE', 'COMMIT', 'ROLLBACK', 'BEGIN', 'END', 'IF', 'ELSE',
-    'CASE', 'WHEN', 'THEN', 'EXISTS'
-    ]
-    pattern = re.compile("^[a-zA-Z0-9_$]+$")
-    relations = set()
-    
-    query_words = query.split()
-    FROM_flag=False
-    for i,word in enumerate(query_words):
-        if(FROM_flag or word == 'FROM'):
-            FROM_flag=True
-            if (word in relation_names):
-                if i+1<len(query_words) and bool(pattern.match(query_words[i+1]) and query_words[i+1] not in sql_keywords):
-                    relations.add(query_words[i+1])
-                else:
-                    relations.add(word)
-                    
-    print(relations)
-    return relations
+    for i in range(len(relations)):
+      if relations[i]==v:
+        relations[i] = k
+        break;
+  
+  return relations
   
   
-def modify_query(query):
+def ctid_query(query):
   '''Extract block and position in block using ctid'''
   selected_index = query.find('SELECT')
   relations = extract_table_names(query)
   modified_query="SELECT "
+  
+  print(relations)
   for relation in relations:
-      modified_query+=f"{relation}.ctid, "
-  modified_query+=query[selected_index+len('SELECT'):]
-  print(modified_query)
+    modified_query+=f"{relation}.ctid,"
+    print(modified_query)
+  modified_query+=query[selected_index+len('SELECT')+1:]
+  # print(modified_query)
   return modified_query
 
 def explain_analyze(query):
@@ -82,5 +67,25 @@ def explain_analyze(query):
   return 'explain (analyze, buffers, format json) ' + query
 
 
-def qep_tree(query):
-  pass
+def qep_tree(cursor, query):
+  '''Generate QEP tree using Postgres' EXPLAIN ANALYZE function'''
+  '''Cursor: Connection cursor from psycopg2
+     Query: SQL query statement
+     
+     Returns: QEP in the form of a JSON document'''
+  explanation = explain_analyze(query)
+  cursor.execute(explanation)
+  all = cursor.fetchone()
+  json_string = json.dumps(all[0][0], indent=2)
+
+  return json_string
+
+def process(cursor, query):
+  
+  '''Process a query and return the output, with block id and access'''
+  cursor.execute(ctid_query(query))
+  output = cursor.fetchall()
+  plan = qep_tree(cursor, query)
+  
+  return output, plan
+  
