@@ -1,7 +1,7 @@
 import psycopg2
 
 
-def get_tables(cursor):
+def get_database_tables(cursor):
   ''' Return all tables in the schema and their column names and data types'''
   result = {}
   tables = []
@@ -29,7 +29,8 @@ def get_tables(cursor):
 
 def extract_table_names(query):
   
-    ''' Return all relations used in a SQL query statement'''
+    ''' Return all relations used in a SQL query statement
+        Input: A SQL Query'''
     query = query.replace(";"," ")
     query = query.replace(","," ")
     import re
@@ -64,8 +65,22 @@ def extract_table_names(query):
     print(relations)
     return relations
   
+  
+def modify_query(query):
+  '''Extract block and position in block using ctid'''
+  selected_index = query.find('SELECT')
+  relations = extract_table_names(query)
+  modified_query="SELECT "
+  for relation in relations:
+      modified_query+=f"{relation}.ctid, "
+  modified_query+=query[selected_index+len('SELECT'):]
+  print(modified_query)
+  return modified_query
+
 def explain_analyze(query):
-  query 
+  '''Add the necessary explain analyze to a SQL query'''
+  return 'explain (analyze, buffers, format json) ' + query
 
 
-def qep_tree(query)
+def qep_tree(query):
+  pass
