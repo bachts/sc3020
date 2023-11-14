@@ -82,7 +82,7 @@ def ctid_query(query):
   
   
   print (modified_query_ctid)
-  print("hello")
+ 
 
   return modified_query_ctid, ctid_list
 
