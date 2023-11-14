@@ -34,17 +34,26 @@ def extract_table_names(query):
       Input: A SQL Query
       Returns: A list of table names'''
   parser = Parser(query)
-
+  query = parser.generalize
   relations = parser.tables
   # print(relations)
   aliases = parser.tables_aliases
   # print(aliases)
+  sql_keywords = [
+    'SELECT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'JOIN',
+    'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'OUTER JOIN', 'ON', 'AS',
+    'DISTINCT', 'UNION', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET',
+    'DELETE', 'CREATE', 'TABLE', 'ALTER', 'ADD', 'DROP', 'INDEX',
+    'CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'REFERENCES', 'CASCADE',
+    'TRUNCATE', 'COMMIT', 'ROLLBACK', 'BEGIN', 'END', 'IF', 'ELSE',
+    'CASE', 'WHEN', 'THEN', 'EXISTS'
+    ]
   for k, v in zip(aliases.keys(), aliases.values()):
     
     for i in range(len(relations)):
-      if relations[i]==v and k!='where':
+      if relations[i]==v and k not in sql_keywords:
         relations[i] = k
-        break;
+        break
   
   return relations
   
