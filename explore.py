@@ -102,8 +102,18 @@ def qep_tree(cursor, query):
   all = cursor.fetchone()
   json_string = json.dumps(all[0][0], indent=2)
 
+  # Extract tree edges from the dict
+  with open('queryplan.json', 'w') as f:
+    json.dumps(all[0][0], indent=2)
+    
   return json_string
 
+def loadjson():
+  with open('queryplan.json') as json_file:
+        data = json.load(json_file)
+  dict_plan_inner = data[0][0]
+  return dict_plan_inner
+  
 def process(cursor, query):
   
   '''Process a query and return the output, with block id and access'''
