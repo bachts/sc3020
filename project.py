@@ -101,6 +101,7 @@ def connect():
             print('Database connection terminated.')
             
 if __name__ == "__main__":
-    connect()
+    # connect()
+    interface.starting_menu()
 
 

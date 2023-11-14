@@ -88,7 +88,7 @@ def ctid_query(query):
 
 def explain_analyze(query):
   '''Add the necessary explain analyze to a SQL query'''
-  return 'explain (analyze, buffers, format json) ' + query
+  return 'explain (analyze, buffers, costs, format json) ' + query
 
 
 def qep_tree(cursor, query):
