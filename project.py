@@ -22,17 +22,37 @@ def remove_linebreaks_and_extra_spaces(input_string):
 
     return result
 
+def get_unique_tuples(rows):
+    tuple_locations = set(list())
+    for (data,) in rows:
+        values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
+        for i in range(len(values)//2):
+            tuple_locations.add(tuple([values[2*i],values[2*i+1]]))
+            
+    print(tuple_locations)
+        
+    
+    
+
+
 def query_input(crsr):
     print("Input your SQL Query: ")
     query = sys.stdin.read()
-    query= remove_linebreaks_and_extra_spaces(query)
-    query, _ = explore.ctid_query(query)
-    query = sql.SQL(query)  
-    crsr.execute(query)
+    
+    query= remove_linebreaks_and_extra_spaces(query) #Clean the query
+    
+    modified_query = explore.ctid_query(query) #Get the blocks accessed
+    modified_query = sql.SQL(modified_query)  
+    crsr.execute(modified_query)
+    
+    
+    
+    
     rows = crsr.fetchall()
     for row in rows:
         print(row)
-   
+    get_unique_tuples(rows)
+    
     
     
     

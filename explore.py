@@ -62,13 +62,13 @@ def extract_table_names(query):
 def ctid_query(query):
   '''Extract block and position in block using ctid'''
   relations=extract_table_names(query)
-  ctid_list=[]
+  #ctid_list=[]
   
   modified_query_ctid="SELECT "
   if 'group by' in query.lower(): #If there is GROUP BY clause
       for i,relation in enumerate(relations):
           modified_query_ctid+=f'ARRAY_AGG({relation}.ctid) AS {relation}_ctid '
-          ctid_list.append(f'{relation}_ctid')
+          #ctid_list.append(f'{relation}_ctid')
           if i+1<len(relations):
             modified_query_ctid+=', '
   else:
@@ -84,7 +84,7 @@ def ctid_query(query):
   print (modified_query_ctid)
  
 
-  return modified_query_ctid, ctid_list
+  return modified_query_ctid #, ctid_list
 
 def explain_analyze(query):
   '''Add the necessary explain analyze to a SQL query'''
