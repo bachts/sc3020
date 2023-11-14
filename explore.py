@@ -84,8 +84,10 @@ def ctid_query(query):
   print (modified_query_ctid)
  
 
-  return modified_query_ctid #, ctid_list
+  return modified_query_ctid,relations #, ctid_list
 
+ 
+  
 def explain_analyze(query):
   '''Add the necessary explain analyze to a SQL query'''
   return 'explain (analyze, buffers, format json) ' + query
