@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import sql
 import json
 from sql_metadata import Parser
 
@@ -60,19 +61,30 @@ def extract_table_names(query):
   
 def ctid_query(query):
   '''Extract block and position in block using ctid'''
+  relations=extract_table_names(query)
+  ctid_list=[]
   
-  selected_index = query.find('SELECT')
- 
-  relations = extract_table_names(query)
-  modified_query="SELECT "
+  modified_query_ctid="SELECT "
+  if 'group by' in query.lower(): #If there is GROUP BY clause
+      for i,relation in enumerate(relations):
+          modified_query_ctid+=f'ARRAY_AGG({relation}.ctid) AS {relation}_ctid '
+          ctid_list.append(f'{relation}_ctid')
+          if i+1<len(relations):
+            modified_query_ctid+=', '
+  else:
+      for i,relation in enumerate(relations):
+            modified_query_ctid +=f"{relation}.ctid "
+            if i+1<len(relations):
+              modified_query_ctid+=', '
   
-  print(relations)
-  for relation in relations:
-    modified_query+=f"{relation}.ctid,"
-    print(modified_query)
-  modified_query+=query[selected_index+len('SELECT')+2:]
-  print(modified_query)
-  return modified_query
+  from_index = query.find('FROM')
+  modified_query_ctid+=query[from_index:]
+  
+  
+  print (modified_query_ctid)
+  print("hello")
+
+  return modified_query_ctid, ctid_list
 
 def explain_analyze(query):
   '''Add the necessary explain analyze to a SQL query'''
@@ -101,3 +113,10 @@ def process(cursor, query):
   
   return output, plan
   
+#SELECT ctid, *
+#FROM
+#WHERE (ctid::text::point)[0]=20 order by ctid;
+
+
+#explain (analyze, buffers, costs off)
+
