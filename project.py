@@ -25,16 +25,22 @@ def remove_linebreaks_and_extra_spaces(input_string):
 
 
 def get_unique_tuples(rows,relations):
+    print("Collecting tuples")
+    import ast
 
     tuple_locations = OrderedDict((relation, []) for relation in relations)
 
-    
-    for (data,) in rows:
-        values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
-        print(values)
-        for i,relation in enumerate(relations):
-            tuple_locations[relation].append([values[2*i],values[2*i+1]])
-
+    print(rows)
+    for row in rows:
+        for i, relation in enumerate(relations):
+            tuple_in_row = list(ast.literal_eval(row[i]))
+            print(tuple_in_row)
+            tuple_locations[relation].append(tuple_in_row)
+            # values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
+        
+    for relation in relations:
+        print(relation)
+        print( tuple_locations[relation])
     return tuple_locations
 
 def query_input(crsr):
@@ -45,20 +51,16 @@ def query_input(crsr):
     
     modified_query,relations = explore.ctid_query(query) #Get the blocks accessed
     modified_query = sql.SQL(modified_query)  
+    
     crsr.execute(modified_query)
     
+    
     rows = crsr.fetchall()
+    
     locations = get_unique_tuples(rows,relations) #returns a dictionary contains the tuple locations of each accessed tuple
+
     
-    interface.display_blocks(locations,crsr)
-    
-    
-    
-    # query = sql.SQL("SELECT * FROM pg_catalog.pg_tables WHERE schemaname!='pg_catalog' AND schemaname!='information_schema'")  
-    # crsr.execute(query)
-    # rows = crsr.fetchall()
-    # for row in rows:
-    #     print(row)
+    print(row)
     
             
     
@@ -88,6 +90,7 @@ def connect():
         #print(block_size)
         print('#############################################################################')
         query_input(crsr)
+        
         crsr.close()
     except(Exception, psycopg2.DatabaseError) as error:
         print(error)
