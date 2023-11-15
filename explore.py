@@ -108,29 +108,29 @@ def get_unique_tuples(rows,relations):
     return tuple_locations
         
 def connect():
-    try:
-        params = config()
-        print('Connecting to the postgreSQL database ...')
-        connection = psycopg2.connect(**params)
-
-        # create a cursor
-        crsr = connection.cursor()
-        print('PostgreSQL database version: ')
-        crsr.execute('SELECT version()')
-        db_version = crsr.fetchone()
-        print(db_version)
-        
-        print('PostgreSQL database connected')
-        
-        # crsr.execute('show block_size')
-        # block_size = crsr.fetchone()
-        #print(block_size)
-        print('#############################################################################')
-        
-        return connection
-      
-    except(Exception, psycopg2.DatabaseError) as error:
-        return error
+  try:
+    global connection
+    params = config()
+    print('Connecting to the postgreSQL database ...')
+    connection = psycopg2.connect(**params)
+    # create a cursor
+    crsr = connection.cursor()
+    print('PostgreSQL database version: ')
+    crsr.execute('SELECT version()')
+    db_version = crsr.fetchone()
+    print(db_version)
+    
+    print('PostgreSQL database connected')
+    
+    # crsr.execute('show block_size')
+    # block_size = crsr.fetchone()
+    #print(block_size)
+    print('#############################################################################')
+    
+    return connection
+    
+  except(Exception, psycopg2.DatabaseError) as error:
+    return error
     
               
 def disconnect(connection):
@@ -160,11 +160,7 @@ def ctid_query(query):
   modified_query_ctid+=query[from_index:]
   
   order_index =modified_query_ctid.upper().find('ORDER BY')
-  modified_query_ctid=modified_query_ctid[:order_index]
-  
-  
-  print (modified_query_ctid)
- 
+  modified_query_ctid=modified_query_ctid[:order_index] 
 
   return modified_query_ctid, relations #, ctid_list
 
@@ -186,7 +182,7 @@ def qep_tree(cursor, query):
 
   # Extract tree edges from the dict
   with open('queryplan.json', 'w') as f:
-    json.dumps(all[0][0], indent=2)
+    json.dump(all[0][0], f, indent=2)
     
   return json_string
 
@@ -199,9 +195,51 @@ def loadjson():
 def process(cursor, query):
   
   '''Process a query and return the output, with block id and access'''
-  cursor.execute(ctid_query(query))
-  output = cursor.fetchall()
-  plan = qep_tree(cursor, query)
-  
-  return output, plan
+  try:
+    cursor.execute(ctid_query(query)[0])
+    output = cursor.fetchall()
+    plan = qep_tree(cursor, query)
+    return output, plan
+  except:
+    cursor.execute('ROLLBACK')
+    connection.commit()
+    return False, False
+    
 
+def display_blocks(relations ,crsr):
+  
+  '''Return the blocks accessed by the query plan
+     Input: '''
+  
+  print("Displaying blocks")
+  relation_details={}
+  for relation in relations:        
+    
+      #OrderedDict(relation:[block][tuple_details])
+      #[ [block1],[block2],...]
+      
+      query = sql.SQL(f'SELECT ctid,* FROM {relation} ORDER BY ctid')
+      crsr.execute(query)
+      rows = crsr.fetchall()
+      
+      block_content={}
+      
+      for row in rows:
+          block,offset = list(map(int,row[0].strip('"()"').split(',')))
+          tuple = [offset] + list(row[1:]) 
+          if block not in block_content.keys():
+              block_content[block]=[tuple]
+          else:
+              block_content[block].append(tuple)
+      
+          relation_details[relation]=block_content
+  for relation,content in relation_details.items():
+      for block,tuples in content.items():
+          # print(f'BLOCK {block}')
+          for tuple in tuples: 
+              # print (tuple)
+              pass
+  return relation_details
+
+def get_parent(json_tree):
+  pass

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from functools import partial
-
+import json
 from PIL import ImageTk, Image
 import explore as e
 
@@ -99,17 +99,23 @@ def start():
   query_menu = ttk.Frame(start_window, relief='groove')
   query_menu.pack(expand=True, fill='both', side='right')
   
+  global tuple_output
+  global query_viz  
+  
   input_query = ttk.Frame(query_menu, relief='groove', width=800, height=300)
   tuple_output = ttk.Frame(query_menu, relief='groove', width=800, height=200)
   query_viz = ttk.Frame(query_menu, relief='groove', width=800, height=500)
+  
   
   query_viz.grid(row=0, column=0)
   input_query.grid(row=1, column=0)
   tuple_output.grid(row=2, column=0)
   
   
-  entry_text = ttk.Label(input_query, text='Your SQL query here:')
+  
   global entry 
+  
+  entry_text = ttk.Label(input_query, text='Your SQL query here:')
   entry = ttk.Entry(input_query)
   submit = ttk.Button(input_query, text='SUBMIT \n QUERY',command=partial(process_query))
 
@@ -120,6 +126,39 @@ def start():
   
   start_window.mainloop()
 
+
+  
+def process_query():
+   
+  query = entry.get()
+  relations = e.extract_original_tables(query)
+  if not relations:
+    query_error()
+    return
+  tuples, tree = e.process(cursor, query)
+  relation_details = e.display_blocks(relations, cursor)
+  if not tuples or not tree:
+    query_error()
+    return
+  
+  slaves = query_viz.pack_slaves()
+  for slave in slaves:
+    slave.pack_forget()
+  
+  global diagram
+  diagram = ttk.Treeview(query_viz)
+  diagram.heading('#0', text='Visualization of the query', anchor=tk.W)
+  diagram.pack()
+  build_tree(tree['Plan'])
+  
+  print(tuples, tree)
+  
+def build_tree(tree):
+  
+  node_type = tree['Node Type']
+  
+  
+  pass
 def start_to_root(start_window):
   '''Go back to main menu and end the connection'''
   delete(start_window)
@@ -134,70 +173,3 @@ def query_error():
   
   button = ttk.Button(l, text='Ok', command=partial(delete, error_message))
   button.pack()
-
-  
-def process_query():
-  
-  query = entry.get()
-  relations = e.extract_original_tables(query)
-  if not relations:
-    query_error()
-    
-  relation_details = {}
-  
-  for relation in relations:
-    query = sql.SQL(f'SELECT ctid,* FROM {relation} ORDER BY ctid')
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    
-    block_content = {}
-    
-    for row in rows:
-      block, offset = list(map(int,row[0].strip('"()"').split(',')))
-      row_tuple = [offset] + list(row[1:])
-      if block not in block_content.keys():
-        block_content[block] = [row_tuple]
-      else: 
-        block_content[block].append(row_tuple)
-      
-    relation_details[relation] = block_content
-    
-  for relation, content in relation_details.items():
-    for block, tuples in content.items():
-      print(f'BLOCK {block}')
-      for row_tuple in tuples: 
-          print(row_tuple)
-      print("#####################################################################################################################################################################")
-   
-
-def display_blocks(locations,query,crsr):
-  print("Displaying blocks")
-  relation_details={}
-  
-  relations = e.extract_original_tables(query)
-  for relation in relations:        
-    
-      #OrderedDict(relation:[block][tuple_details])
-      #[ [block1],[block2],...]
-      
-      query = sql.SQL(f'SELECT ctid,* FROM {relation} ORDER BY ctid')
-      crsr.execute(query)
-      rows = crsr.fetchall()
-      
-      block_content={}
-      
-      for row in rows:
-          block,offset = list(map(int,row[0].strip('"()"').split(',')))
-          tuple = [offset] + list(row[1:]) 
-          if block not in block_content.keys():
-              block_content[block]=[tuple]
-          else:
-              block_content[block].append(tuple)
-      
-          relation_details[relation]=block_content
-  for relation,content in relation_details.items():
-      for block,tuples in content.items():
-          print(f'BLOCK {block}')
-          for tuple in tuples: 
-              print (tuple)
-          print("#####################################################################################################################################################################")
