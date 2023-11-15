@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2 import sql
 import json
 from sql_metadata import Parser
+from config import config
 
 def get_database_tables(cursor):
   ''' Return all tables in the schema and their column names and data types'''
@@ -36,6 +37,8 @@ def extract_table_names(query):
       Returns: A list of table names'''
   parser = Parser(query)
   query = parser.generalize
+  parser = Parser(query)
+    
   relations = parser.tables
   # print(relations)
   aliases = parser.tables_aliases
@@ -62,7 +65,71 @@ def extract_original_tables(query):
   parser = Parser(query)
   relations=parser.tables
   return relations
-  
+
+
+
+
+def remove_linebreaks_and_extra_spaces(input_string):
+    # Remove line breaks
+    without_linebreaks = input_string.replace('\n', ' ').replace('\r', '')
+
+    # Replace multiple spaces with a single space
+    without_extra_spaces = re.sub(r'\s+', ' ', without_linebreaks)
+
+    # Strip leading and trailing spaces
+    result = without_extra_spaces.strip()
+
+    return result
+
+
+def get_unique_tuples(rows,relations):
+    print("Collecting tuples")
+    import ast
+
+    tuple_locations = OrderedDict((relation, []) for relation in relations)
+
+    print(rows)
+    for row in rows:
+        for i, relation in enumerate(relations):
+            tuple_in_row = list(ast.literal_eval(row[i]))
+            print(tuple_in_row)
+            tuple_locations[relation].append(tuple_in_row)
+            # values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
+        
+    for relation in relations:
+        print(relation)
+        print( tuple_locations[relation])
+    return tuple_locations
+        
+def connect():
+    try:
+        params = config()
+        print('Connecting to the postgreSQL database ...')
+        connection = psycopg2.connect(**params)
+
+        # create a cursor
+        crsr = connection.cursor()
+        print('PostgreSQL database version: ')
+        crsr.execute('SELECT version()')
+        db_version = crsr.fetchone()
+        print(db_version)
+        
+        print('PostgreSQL database connected')
+        
+        # crsr.execute('show block_size')
+        # block_size = crsr.fetchone()
+        #print(block_size)
+        print('#############################################################################')
+        
+        return connection
+      
+    except(Exception, psycopg2.DatabaseError) as error:
+        return error
+    
+              
+def disconnect(connection):
+  connection.close() 
+  print('closed connection')
   
 def ctid_query(query):
   '''Extract block and position in block using ctid'''

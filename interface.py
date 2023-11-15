@@ -1,16 +1,20 @@
 import tkinter as tk
+from tkinter import ttk
+from functools import partial
+
 from PIL import ImageTk, Image
+import explore as e
 
 import psycopg2
 from psycopg2 import sql
 
-import explore
-
+ws = '1000x800'
+title = 'Query Explainer'
 def starting_menu():
-  global main_menu
-  main_menu = tk.Tk()
-  main_menu.title('App shit')
-  main_menu.geometry('500x500')
+  global root
+  root = tk.Tk()
+  root.title(title)
+  root.geometry(ws)
   
   text_frame = tk.Frame()
   text_frame.pack(side='top', fill=None)
@@ -20,17 +24,38 @@ def starting_menu():
   # img = ImageTk.PhotoImage(Image.open('png-transparent-postgresql-database-logo-database-symbol-blue-text-logo-thumbnail.png'), height=10, width=10)
   # tk.Label(logo_frame, image=img).pack()
   
-  tk.Label(text_frame, text='Very good query explainer v1.0').pack(pady=20)
+  ttk.Title(text_frame, text='Very good query explainer v1.0').pack(pady=20)
   
-  selection_frame = tk.Frame()
-  selection_frame.pack(side='top')
-  tk.Button(selection_frame, text='Start Exploring', width=15, height=1, command=start()).pack(pady=10)
-  tk.Button(selection_frame, text='About', width=10, height=1).pack(pady=10)
+  main_frame = ttk.Frame()
+  main_frame.pack(side='top')
+  ttk.Button(main_frame, text='Start Exploring', command=start).pack(pady=10)
+  ttk.Button(main_frame, text='About', command=show_info).pack(pady=10)
+  ttk.Button()
+  ttk.Button(main_frame, text='Exit Program', command=partial(delete, root)).pack()
   
-  main_menu.mainloop()
+  root.mainloop()
+  
+def show_info():
+  global info
+  info = tk.Toplevel(root)
+  info.geometry('200x200')
+  
+  ttk.Label(info, text='XD').pack()
+  ttk.Button(info, text='Ok', command=partial(delete, info)).pack()
+  
+def delete(obj):
+  obj.destroy()
   
 def start():
-  pass
+  
+  conn = e.connect()
+  cursor = conn.cursor()
+  
+  start_window = tk.Tk()
+  start_window.title(title)
+  start_window.geometry(ws)
+  start_window.pack()
+  start_window.mainloop()
 
 
 
@@ -38,7 +63,7 @@ def display_blocks(locations,query,crsr):
     print("Displaying blocks")
     relation_details={}
     
-    relations = explore.extract_original_tables(query)
+    relations = e.extract_original_tables(query)
     for relation in relations:        
         #OrderedDict(relation:[block][tuple_details])
         #[ [block1],[block2],...]
