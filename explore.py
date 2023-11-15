@@ -3,6 +3,8 @@ from psycopg2 import sql
 import json
 from sql_metadata import Parser
 from config import config
+import re
+from collections import OrderedDict
 
 def get_database_tables(cursor):
   ''' Return all tables in the schema and their column names and data types'''
@@ -62,9 +64,13 @@ def extract_table_names(query):
   return relations
 
 def extract_original_tables(query):
+  
   parser = Parser(query)
-  relations=parser.tables
-  return relations
+  try:
+    relations=parser.tables
+    return relations
+  except:
+    return False
 
 
 
@@ -129,7 +135,7 @@ def connect():
               
 def disconnect(connection):
   connection.close() 
-  print('closed connection')
+  print('Closed connection')
   
 def ctid_query(query):
   '''Extract block and position in block using ctid'''
@@ -160,7 +166,7 @@ def ctid_query(query):
   print (modified_query_ctid)
  
 
-  return modified_query_ctid,relations #, ctid_list
+  return modified_query_ctid, relations #, ctid_list
 
 def explain_analyze(query):
   '''Add the necessary explain analyze to a SQL query'''
@@ -198,11 +204,4 @@ def process(cursor, query):
   plan = qep_tree(cursor, query)
   
   return output, plan
-  
-#SELECT ctid, *
-#FROM
-#WHERE (ctid::text::point)[0]=20 order by ctid;
-
-
-#explain (analyze, buffers, costs off)
 
