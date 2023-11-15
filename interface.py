@@ -128,7 +128,7 @@ def start_to_root(start_window):
  
 def query_error():
   error_message = tk.Toplevel(start_window)
-  start_window.wait_window(error_message)
+  # start_window.wait_window(error_message)
   l = ttk.LabelFrame(error_message, text="Please check your \n query's syntax")
   l.pack()
   
