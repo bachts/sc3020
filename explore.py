@@ -52,15 +52,21 @@ def extract_table_names(query):
   for k, v in zip(aliases.keys(), aliases.values()):
     
     for i in range(len(relations)):
-      if relations[i]==v and k not in sql_keywords:
+      if relations[i]==v and k.upper() not in sql_keywords:
         relations[i] = k
         break
   
+  return relations
+
+def extract_original_tables(query):
+  parser = Parser(query)
+  relations=parser.tables
   return relations
   
   
 def ctid_query(query):
   '''Extract block and position in block using ctid'''
+  print('ctid_query')
   relations=extract_table_names(query)
   #ctid_list=[]
   
@@ -77,14 +83,17 @@ def ctid_query(query):
             if i+1<len(relations):
               modified_query_ctid+=', '
   
-  from_index = query.find('FROM')
+  from_index = query.upper().find('FROM')
   modified_query_ctid+=query[from_index:]
+  
+  order_index =modified_query_ctid.upper().find('ORDER BY')
+  modified_query_ctid=modified_query_ctid[:order_index]
   
   
   print (modified_query_ctid)
  
 
-  return modified_query_ctid #, ctid_list
+  return modified_query_ctid,relations #, ctid_list
 
 def explain_analyze(query):
   '''Add the necessary explain analyze to a SQL query'''
