@@ -202,8 +202,8 @@ def process(cursor, query):
   
   '''Process a query and return the output, with block id and access'''
   
-  # print(ctid_query(query)[0])
-  # cursor.execute(ctid_query(query)[0])
+  print(ctid_query(query)[0])
+  cursor.execute(ctid_query(query)[0])
 
   try:
     cursor.execute(ctid_query(query)[0])

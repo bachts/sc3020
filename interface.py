@@ -7,8 +7,9 @@ import explore as e
 from tkinter import font as tkFont  
 import psycopg2
 from psycopg2 import sql
+from graphviz import open_web
 
-ws = '1000x800'
+ws = '1000x1000'
 title = 'Query Explainer'
 
 def starting_menu():
@@ -79,12 +80,12 @@ def start():
   ### Info of database relations columns
   
   db_info = ttk.Frame(start_window, relief='raised', width=200, height=1000)
-  db_info.place(x=0, y=0, width=200, height=800)
+  db_info.place(x=0, y=0, width=200, height=1000)
   
   # Create a treeview to display all relations
   tree = ttk.Treeview(db_info)
   tree.heading('#0', text='List of relations', anchor=tk.W)
-  tree.place(x=0, y=0, width=200, height=700)
+  tree.place(x=0, y=0, width=200, height=900)
 
   # Inserting relations into treeview
   for id, relation in enumerate(relations):
@@ -92,41 +93,43 @@ def start():
     for column, dtype in tables[relation]:
       tree.insert(id, tk.END, text=column + '-' + dtype, open=False)
   button = ttk.Button(db_info, text='Go Back', command=partial(start_to_root, start_window))
-  button.place(x=0, y=700, height=100, width=200)
-  
+  button.place(x=0, y=900, height=100, width=200)
+  scrollbar = ttk.Scrollbar(db_info, command=tree.yview)
+  scrollbar.place(x=180, y=0, height=900, width=20)
+
   
   ### Place to input SQL query
   
   query_menu = ttk.Frame(start_window, relief='groove')
-  query_menu.place(x=200, y=0, width=800, height=800)
+  query_menu.place(x=200, y=0, width=800, height=1000)
   
   global tuple_output
   global query_viz  
   
   input_query = ttk.Frame(query_menu, relief='groove', width=800, height=200)
-  tuple_output = ttk.Frame(query_menu, relief='groove', width=800, height=200)
-  query_viz = ttk.Frame(query_menu, relief='groove', width=800, height=600)
+  tuple_output = ttk.Frame(query_menu, relief='groove', width=800, height=300)
+  query_viz = ttk.Frame(query_menu, relief='groove', width=800, height=500)
   
   
   query_viz.place(x=0, y=0)
-  input_query.place(x=0, y=600)
-  tuple_output.place(x=0, y=800)
+  input_query.place(x=0, y=500)
+  tuple_output.place(x=0, y=700)
   
   
   global diagram
   diagram = ttk.Treeview(query_viz)
   diagram.heading('#0', text='Visualization of the query')
-  diagram.place(x=0, y=0, width=800, height=600)
+  diagram.place(x=0, y=0, width=800, height=500)
   
   
   global entry 
   entry_text = ttk.Label(input_query, text='Your SQL query here:')
-  entry = ttk.Entry(input_query, width=70)
+  entry = tk.Text(input_query)
   submit = ttk.Button(input_query, text='SUBMIT \n QUERY',command=partial(process_query))
 
-  entry_text.grid(row=0, column=0)
-  entry.grid(row=1, column=0)
-  submit.grid(row=1, column=1)
+  entry_text.place(x=0, y=0, height=20)
+  entry.place(x=0, y=20, height=180, width=600)
+  submit.place(x=600, y=20, height=180, width=200)
   
   
   start_window.mainloop()
@@ -134,8 +137,8 @@ def start():
 
   
 def process_query():
-   
-  query = entry.get()
+  '''Process a query and update the UI accordingly'''
+  query = entry.get('1.0', tk.END)
   print(query)
   relations = e.extract_original_tables(query)
   print(relations)
@@ -150,26 +153,34 @@ def process_query():
     query_error()
     return
   
+  populate_query_viz(tree_dict)
+  
+  print(relation_details)
+  # print(tuples, tree)
+
+def populate_query_viz(tree_dict):  
   slaves = query_viz.place_slaves()
   for slave in slaves:
     slave.place_forget()
   
   global diagram
   style = ttk.Style()
-  style.configure('diagram.Treeview', rowheight=100)
+  style.configure('diagram.Treeview', rowheight=180)
   style.map('diagram.Treeview')
+  
   
   diagram = ttk.Treeview(query_viz, style='diagram.Treeview')
   diagram.heading('#0', text='Visualization of the query')
-  details = tree_dict.items()
   plans = tree_dict['Plan']
   desc = generate_description(plans)
   diagram.insert('', tk.END, text=desc, iid=0, open=False)
   build_tree(plans, 0)
   diagram.place(x=0, y=0, width=800, height=600)
-  
-  # print(tuples, tree)
-  
+  scrollbar = ttk.Scrollbar(query_viz, command=diagram.yview)
+  diagram.configure(yscrollcommand=scrollbar.set)
+  scrollbar.place(x=780, y=0, height=600, width=20)
+  web_view = ttk.Button(query_viz, text='Online Version',command=open_web)
+  web_view.place(x=600, y=100, height=50, width=110)
 def build_tree(tree, parent_id):
   
   if 'Plans' not in tree.keys():
@@ -190,22 +201,43 @@ def start_to_root(start_window):
   starting_menu()
  
 def generate_description(plans):
-  desc = f"{plans['Node Type']}\nTotal Cost: {plans['Total Cost']}\n {plans['Plan Rows']} rows and {plans['Plan Width']} width\nTime taken: {plans['Actual Total Time']}\nBlocks hit: {plans['Shared Hit Blocks']} Blocks Read: {plans['Shared Read Blocks']}"
-  if 'Join' in plans['Node Type']:
+  desc = f"{plans['Node Type']}"
+  if 'Join' in plans['Node Type'] or 'Nested Loop' in plans['Node Type']:
     desc = desc + f"\nJoin Type: {plans['Join Type']}"
+    if plans['Node Type'] == 'Nested Loop':
+      desc = desc + f"\nNumber of Loops: {plans['Actual Loops']}"
+    if plans['Node Type'] == 'Hash Join':
+      desc = desc + f"\nHash Cond: {plans['Hash Cond']}"
   if 'Aggregate' in plans['Node Type']:
     desc = desc + f"\nStrategy: {plans['Strategy']}"
+    desc = desc + f"\nPartial Mode: {plans['Partial Mode']}"
+    if 'Group Key' in plans.keys():
+      desc = desc + f"\nGroup Key:"
+      for key in plans['Group Key']:
+        desc = desc + f"\n\t{key}"
     pass
   if 'Sort' in plans['Node Type']:
     desc = desc + f"\nSort Method: {plans['Sort Method']}\n\tSort Space Used: {plans['Sort Space Used']}\n\tSort Space Type: {plans['Sort Space Type']}"
     desc = desc + f"\nSort Keys:"
     for key in plans['Sort Key']:
-      print(key)
       desc = desc + f"\n\t{key}"
-      
   if 'Scan' in plans['Node Type']:
     desc = desc + f"\nRelation Name: {plans['Relation Name']}"
-    desc = desc + f"\nFilter: {plans['Filter']}"
+    if plans['Node Type']=='Index Scan':
+      desc = desc + f"\n\tScan Direction: {plans['Scan Direction']}"
+      desc = desc + f"\n\tIndex Name: {plans['Index Name']}"
+      desc = desc + f"\n\tIndex Cond: {plans['Index Cond']}"
+ 
+    if 'Filter' in plans.keys():
+      desc = desc + f"\nFilter: {plans['Filter']}"
+  if plans['Node Type']=='Hash':
+    desc = desc + '\nHash Information'
+    desc = desc + f"\n\tHash Buckets: {plans['Hash Buckets']}"
+    desc = desc + f"\n\tHash Batches: {plans['Hash Batches']}"
+    desc = desc + f"\n\tPeak Memory: {plans['Peak Memory Usage']}"
+
+
+  desc = desc + f"\nTotal Cost: {plans['Total Cost']}\n{plans['Plan Rows']} rows and {plans['Plan Width']} width\nTime taken: {plans['Actual Total Time']}\nBlocks hit: {plans['Shared Hit Blocks']} Blocks Read: {plans['Shared Read Blocks']}"
   
   return desc
 
