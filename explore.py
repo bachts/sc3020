@@ -52,7 +52,8 @@ def extract_table_names(query):
     'DELETE', 'CREATE', 'TABLE', 'ALTER', 'ADD', 'DROP', 'INDEX',
     'CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'REFERENCES', 'CASCADE',
     'TRUNCATE', 'COMMIT', 'ROLLBACK', 'BEGIN', 'END', 'IF', 'ELSE',
-    'CASE', 'WHEN', 'THEN', 'EXISTS'
+    'CASE', 'WHEN', 'THEN', 'EXISTS', 'LEFT OUTER JOIN', 'RIGHT OUTER JOIN', 
+    'LEFT INNER JOIN', 'RIGHT INNER JOIN',
     ]
   for k, v in zip(aliases.keys(), aliases.values()):
     
@@ -140,7 +141,7 @@ def disconnect(connection):
 def ctid_query(query):
   '''Extract block and position in block using ctid'''
   print('ctid_query')
-  relations=extract_table_names(query)
+  relations = extract_table_names(query)
   #ctid_list=[]
   
   modified_query_ctid="SELECT "
@@ -158,12 +159,14 @@ def ctid_query(query):
   
   from_index = query.upper().find('FROM')
   modified_query_ctid+=query[from_index:]
+  # print(modified_query_ctid)
   
-  order_index =modified_query_ctid.upper().find('ORDER BY')
-  modified_query_ctid=modified_query_ctid[:order_index]
+  order_index = modified_query_ctid.upper().find('ORDER BY')
+  if order_index!=-1:
+    modified_query_ctid=modified_query_ctid[:order_index]
   
-  order_index =modified_query_ctid.upper().find('ORDER BY')
-  modified_query_ctid=modified_query_ctid[:order_index] 
+  # order_index =modified_query_ctid.upper().find('ORDER BY')
+  # modified_query_ctid=modified_query_ctid[:order_index] 
 
   return modified_query_ctid, relations #, ctid_list
 
@@ -192,16 +195,21 @@ def qep_tree(cursor, query):
 def loadjson():
   with open('queryplan.json') as json_file:
         data = json.load(json_file)
-  dict_plan_inner = data[0][0]
+  dict_plan_inner = data
   return dict_plan_inner
   
 def process(cursor, query):
   
   '''Process a query and return the output, with block id and access'''
+  
+  # print(ctid_query(query)[0])
+  # cursor.execute(ctid_query(query)[0])
+
   try:
     cursor.execute(ctid_query(query)[0])
     output = cursor.fetchall()
-    plan = qep_tree(cursor, query)
+    pretty_plan = qep_tree(cursor, query)
+    plan = loadjson()
     return output, plan
   except:
     cursor.execute('ROLLBACK')
