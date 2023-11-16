@@ -246,9 +246,9 @@ def display_blocks(relations ,crsr):
           relation_details[relation]=block_content
   for relation,content in relation_details.items():
       for block,tuples in content.items():
-          # print(f'BLOCK {block}')
+          print(f'BLOCK {block}')
           for tuple in tuples: 
-              # print (tuple)
+              print (tuple)
               pass
   return relation_details
 
