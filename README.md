@@ -5,7 +5,8 @@ This is a tutorial on how to execute the project.
 
 The environment information is incorporated in environment.yaml for Conda environments, and requirements.txt for pip venv.
 
-After loading and activating the environment, the project can be ran by running the file project.py in your preferred IDE, or in CLI: \n python3 project.py
+After loading and activating the environment, the project can be ran by running the file project.py in your preferred IDE, or in CLI: 
+  python3 project.py
 
 The instruction and overview about the algorithm and the GUI can be found in the project.
 
