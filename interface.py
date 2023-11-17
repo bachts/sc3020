@@ -154,9 +154,26 @@ def process_query():
     return
   
   populate_query_viz(tree_dict)
-  
+  populate_tuples(relation_details)
   print(relation_details)
   # print(tuples, tree)
+
+def populate_tuples(relation_details):
+  
+  print('Populating Tuples')
+  import tksheet
+  tabs = ttk.Notebook(tuple_output)
+  for relation, content in relation_details.items():
+    sub_tabs = ttk.Notebook(tabs)
+    tabs.add(sub_tabs, text=relation)
+    for block, tuples in content.items():
+      block_tab = ttk.Notebook(sub_tabs)
+      sub_tabs.add(block_tab, text=f'BLOCK {block}')
+      sheet = tksheet.Sheet(block_tab, data=tuples)
+      sheet.pack()
+        
+  print('Done')
+  tabs.place(x=0, y=0, width=800)
 
 def populate_query_viz(tree_dict):  
   slaves = query_viz.place_slaves()

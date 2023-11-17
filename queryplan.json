@@ -3,17 +3,17 @@
     "Node Type": "Seq Scan",
     "Parallel Aware": false,
     "Async Capable": false,
-    "Relation Name": "nation",
-    "Alias": "nation",
+    "Relation Name": "customer",
+    "Alias": "customer",
     "Startup Cost": 0.0,
-    "Total Cost": 1.25,
-    "Plan Rows": 25,
-    "Plan Width": 434,
-    "Actual Startup Time": 0.003,
-    "Actual Total Time": 0.006,
-    "Actual Rows": 25,
+    "Total Cost": 5084.0,
+    "Plan Rows": 150000,
+    "Plan Width": 158,
+    "Actual Startup Time": 0.002,
+    "Actual Total Time": 7.264,
+    "Actual Rows": 150000,
     "Actual Loops": 1,
-    "Shared Hit Blocks": 1,
+    "Shared Hit Blocks": 3584,
     "Shared Read Blocks": 0,
     "Shared Dirtied Blocks": 0,
     "Shared Written Blocks": 0,
@@ -25,8 +25,8 @@
     "Temp Written Blocks": 0
   },
   "Planning": {
-    "Shared Hit Blocks": 8,
-    "Shared Read Blocks": 0,
+    "Shared Hit Blocks": 23,
+    "Shared Read Blocks": 5,
     "Shared Dirtied Blocks": 0,
     "Shared Written Blocks": 0,
     "Local Hit Blocks": 0,
@@ -36,7 +36,7 @@
     "Temp Read Blocks": 0,
     "Temp Written Blocks": 0
   },
-  "Planning Time": 0.052,
+  "Planning Time": 0.739,
   "Triggers": [],
-  "Execution Time": 0.013
+  "Execution Time": 11.368
 }
