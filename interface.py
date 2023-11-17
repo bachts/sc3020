@@ -35,7 +35,7 @@ def starting_menu():
   main_frame = ttk.Frame()
   main_frame.pack(side='top')
   ttk.Button(main_frame, text='Start Exploring', command=start).pack(pady=10)
-  ttk.Button(main_frame, text='About', command=show_info).pack(pady=10)
+  # ttk.Button(main_frame, text='About', command=show_info).pack(pady=10)
   ttk.Button(main_frame, text='Exit Program', command=exit_program).pack()
   
   root.mainloop()
@@ -193,7 +193,7 @@ def populate_tuples(relation_details, tuple_locations):
       for block in random.sample(list(blocks_accessed.keys()), 5):
         tuples = content[block]
         block_tab = ttk.Notebook(sub_tabs)
-        sub_tabs.add(block_tab, text=f'ACCESSED BLOCK {block}')       
+        sub_tabs.add(block_tab, text=f'ACC{block}')       
         headers = ['ctid']
         for i in tables[relation]:
           headers.append(i[0])
@@ -208,7 +208,7 @@ def populate_tuples(relation_details, tuple_locations):
       for block in blocks_accessed.keys(): 
         tuples = content[block]
         block_tab = ttk.Notebook(sub_tabs)
-        sub_tabs.add(block_tab, text=f'ACCESSED BLOCK {block}')
+        sub_tabs.add(block_tab, text=f'ACC{block}')
         headers = ['ctid']
         for i in tables[relation]:
           headers.append(i[0])
@@ -218,11 +218,11 @@ def populate_tuples(relation_details, tuple_locations):
         sheet.pack(fill='both')
         # sheet.place(x=0, y=0, height=300, width=800)
     
-    if len(content.items()) > 10: # Sample 10 blocks only
-      for block, tuples in random.sample(content.items(), 10):
+    if len(content.items()) > 5: # Sample 5 blocks only
+      for block, tuples in random.sample(content.items(), 5):
         if block not in blocks_accessed.keys():
           block_tab = ttk.Notebook(sub_tabs)
-          sub_tabs.add(block_tab, text=f'UNACCESSED BLOCK {block}')       
+          sub_tabs.add(block_tab, text=f'UNAC{block}')       
           headers = ['ctid']
           for i in tables[relation]:
             headers.append(i[0])
@@ -235,7 +235,7 @@ def populate_tuples(relation_details, tuple_locations):
       for block, tuples in zip(content.keys(), content.values()): 
         if block not in list(blocks_accessed.keys()): 
           block_tab = ttk.Notebook(sub_tabs)
-          sub_tabs.add(block_tab, text=f'UNACCSSED BLOCK {block}')
+          sub_tabs.add(block_tab, text=f'UNAC{block}')
           headers = ['ctid']
           for i in tables[relation]:
             headers.append(i[0])
@@ -270,7 +270,7 @@ def populate_query_viz(tree_dict):
   diagram.configure(yscrollcommand=scrollbar.set)
   scrollbar.place(x=780, y=0, height=600, width=20)
   web_view = ttk.Button(query_viz, text='Online Version',command=open_web)
-  web_view.place(x=600, y=100, height=50, width=110)
+  web_view.place(x=600, y=100, height=50, width=130)
 def build_tree(tree, parent_id):
   
   if 'Plans' not in tree.keys():

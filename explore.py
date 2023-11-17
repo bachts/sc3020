@@ -209,8 +209,7 @@ def process(cursor, query):
   
   # print(ctid_query(query)[0])
   # cursor.execute(ctid_query(query)[0])
-  # modified_query, relations = ctid_query(query)
-  # print(modified_query)
+
   try:
     modified_query, relations = ctid_query(query)
     cursor.execute(modified_query)
@@ -223,7 +222,7 @@ def process(cursor, query):
   except:
     cursor.execute('ROLLBACK')
     connection.commit()
-    return False, False, False
+    return False, False,
     
 
 def display_blocks(relations ,crsr):

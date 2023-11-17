@@ -1,19 +1,23 @@
 {
   "Plan": {
-    "Node Type": "Seq Scan",
+    "Node Type": "Index Scan",
     "Parallel Aware": false,
     "Async Capable": false,
+    "Scan Direction": "Forward",
+    "Index Name": "customer_pkey",
     "Relation Name": "customer",
     "Alias": "customer",
-    "Startup Cost": 0.0,
-    "Total Cost": 5084.0,
-    "Plan Rows": 150000,
+    "Startup Cost": 0.42,
+    "Total Cost": 18.79,
+    "Plan Rows": 211,
     "Plan Width": 158,
-    "Actual Startup Time": 0.003,
-    "Actual Total Time": 7.462,
-    "Actual Rows": 150000,
+    "Actual Startup Time": 0.01,
+    "Actual Total Time": 0.046,
+    "Actual Rows": 199,
     "Actual Loops": 1,
-    "Shared Hit Blocks": 3584,
+    "Index Cond": "((c_custkey > 100) AND (c_custkey < 300))",
+    "Rows Removed by Index Recheck": 0,
+    "Shared Hit Blocks": 9,
     "Shared Read Blocks": 0,
     "Shared Dirtied Blocks": 0,
     "Shared Written Blocks": 0,
@@ -25,7 +29,7 @@
     "Temp Written Blocks": 0
   },
   "Planning": {
-    "Shared Hit Blocks": 28,
+    "Shared Hit Blocks": 33,
     "Shared Read Blocks": 0,
     "Shared Dirtied Blocks": 0,
     "Shared Written Blocks": 0,
@@ -36,7 +40,7 @@
     "Temp Read Blocks": 0,
     "Temp Written Blocks": 0
   },
-  "Planning Time": 0.103,
+  "Planning Time": 0.151,
   "Triggers": [],
-  "Execution Time": 11.814
+  "Execution Time": 0.067
 }
