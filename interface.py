@@ -8,6 +8,8 @@ from tkinter import font as tkFont
 import psycopg2
 from psycopg2 import sql
 from graphviz import open_web
+import random
+from ttkthemes import ThemedTk
 
 ws = '1000x1000'
 title = 'Query Explainer'
@@ -20,18 +22,20 @@ def starting_menu():
   
   root = tk.Tk()
   root.title(title)
-  root.geometry(ws)
+  root.geometry('500x500')
   
-  text_frame = tk.LabelFrame()
+  root.tk.call('source', 'Azure-ttk-theme-main/azure.tcl')
+  root.tk.call('set_theme', 'dark')
+  
+  text_frame = ttk.LabelFrame()
   text_frame.pack(side='top', fill=None)
   
-  tk.Label(text_frame, text='Very good query explainer v1.0').pack(pady=20)
+  ttk.Label(text_frame, text='Very good query explainer v1.0').pack(pady=20)
   ttk.Style().configure('Treeview',rowheight=30)
   main_frame = ttk.Frame()
   main_frame.pack(side='top')
   ttk.Button(main_frame, text='Start Exploring', command=start).pack(pady=10)
   ttk.Button(main_frame, text='About', command=show_info).pack(pady=10)
-  ttk.Button()
   ttk.Button(main_frame, text='Exit Program', command=exit_program).pack()
   
   root.mainloop()
@@ -40,6 +44,7 @@ def show_info():
   
   '''Information about the '''
   info = tk.Toplevel(root)
+  info.tk.call('set_theme', 'dark')
   info.geometry('200x200')
   
   ttk.Label(info, text='Information about the app here').pack()
@@ -51,6 +56,8 @@ def delete(obj):
 def exit_program():
   
   exit_message = tk.Toplevel(root)
+  exit_message.tk.call('set_theme', 'dark')
+
   # exit_message.geometry('200x200')
   l = ttk.LabelFrame(exit_message, text='Are you sure you want to quit?')
   l.pack()
@@ -70,10 +77,14 @@ def start():
   
   global start_window
   start_window = tk.Tk()
+  start_window.tk.call('source', 'Azure-ttk-theme-main/azure.tcl')
+  start_window.tk.call('set_theme', 'dark')
   start_window.title(title)
   start_window.geometry(ws)
   
+  global tables
   tables = e.get_database_tables(cursor)
+  global relations
   relations = tables.keys()
   # print(relations)
   
@@ -139,14 +150,15 @@ def start():
 def process_query():
   '''Process a query and update the UI accordingly'''
   query = entry.get('1.0', tk.END)
-  print(query)
+  # print(query)
   relations = e.extract_original_tables(query)
   print(relations)
   if not relations:
     print('wtf?')
     query_error()
     return
-  tuples, tree_dict = e.process(cursor, query)
+  tuples, tree_dict, rows = e.process(cursor, query)
+  tuples_locations = e.get_unique_tuples(tuples, relations)
   relation_details = e.display_blocks(relations, cursor)
   if not tuples or not tree_dict:
     print(tuples, tree_dict)
@@ -155,7 +167,7 @@ def process_query():
   
   populate_query_viz(tree_dict)
   populate_tuples(relation_details)
-  print(relation_details)
+  # print(relation_details)
   # print(tuples, tree)
 
 def populate_tuples(relation_details):
@@ -166,11 +178,28 @@ def populate_tuples(relation_details):
   for relation, content in relation_details.items():
     sub_tabs = ttk.Notebook(tabs)
     tabs.add(sub_tabs, text=relation)
-    for block, tuples in content.items():
-      block_tab = ttk.Notebook(sub_tabs)
-      sub_tabs.add(block_tab, text=f'BLOCK {block}')
-      sheet = tksheet.Sheet(block_tab, data=tuples)
-      sheet.pack()
+    if len(content.items()) > 10: # Sample 10 blocks only
+      for block, tuples in random.sample(content.items(), 10):
+        block_tab = ttk.Notebook(sub_tabs)
+        sub_tabs.add(block_tab, text=f'BLOCK {block}')       
+        headers = ['ctid']
+        for i in tables[relation]:
+          headers.append(i[0])
+        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers)
+        scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
+        scrollbar.pack(fill='y', side='top') 
+        sheet.pack(fill='both')
+    else:
+      for block, tuples in content.items():
+        block_tab = ttk.Notebook(sub_tabs)
+        sub_tabs.add(block_tab, text=f'BLOCK {block}')
+        headers = ['ctid']
+        for i in tables[relation]:
+          headers.append(i[0])
+        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers)
+        scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
+        scrollbar.pack(fill='y', side='top') 
+        sheet.pack(fill='both')
         
   print('Done')
   tabs.place(x=0, y=0, width=800)

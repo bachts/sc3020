@@ -90,24 +90,27 @@ def remove_linebreaks_and_extra_spaces(input_string):
 
 
 def get_unique_tuples(rows,relations):
-    print("Collecting tuples")
-    import ast
 
-    tuple_locations = OrderedDict((relation, []) for relation in relations)
+  '''Get the locations for the tuples accessed'''
 
-    print(rows)
-    for row in rows:
-        for i, relation in enumerate(relations):
-            tuple_in_row = list(ast.literal_eval(row[i]))
-            print(tuple_in_row)
-            tuple_locations[relation].append(tuple_in_row)
-            # values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
-        
-    for relation in relations:
-        print(relation)
-        print( tuple_locations[relation])
-    return tuple_locations
-        
+  print("Collecting tuples")
+  import ast
+  tuple_locations = OrderedDict((relation, []) for relation in relations)
+  # print(rows)
+  print(tuple_locations)
+  for row in rows:
+      for i, relation in enumerate(relations):
+          print(row[i])
+          tuple_in_row = list(ast.literal_eval(row[i]))
+          print(tuple_in_row)
+          tuple_locations[relation].append(tuple_in_row)
+          # values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
+      
+  for relation in relations:
+      print(relation)
+      print(tuple_locations[relation])
+  return tuple_locations
+      
 def connect():
   try:
     global connection
@@ -146,16 +149,16 @@ def ctid_query(query):
   
   modified_query_ctid="SELECT "
   if 'group by' in query.lower(): #If there is GROUP BY clause
-      for i,relation in enumerate(relations):
-          modified_query_ctid+=f'ARRAY_AGG({relation}.ctid) AS {relation}_ctid '
-          #ctid_list.append(f'{relation}_ctid')
-          if i+1<len(relations):
-            modified_query_ctid+=', '
+    for i, relation in enumerate(relations):
+      modified_query_ctid+=f'ARRAY_AGG({relation}.ctid) AS {relation}_ctid '
+      #ctid_list.append(f'{relation}_ctid')
+      if i+1<len(relations):
+        modified_query_ctid+=', '
   else:
-      for i,relation in enumerate(relations):
-            modified_query_ctid +=f"{relation}.ctid "
-            if i+1<len(relations):
-              modified_query_ctid+=', '
+    for i, relation in enumerate(relations):
+        modified_query_ctid +=f"{relation}.ctid "
+        if i+1<len(relations):
+          modified_query_ctid+=', '
   
   from_index = query.upper().find('FROM')
   modified_query_ctid+=query[from_index:]
@@ -208,19 +211,21 @@ def process(cursor, query):
   try:
     cursor.execute(ctid_query(query)[0])
     output = cursor.fetchall()
+    cursor.execute(query)
+    rows = cursor.fetchall()
     pretty_plan = qep_tree(cursor, query)
     plan = loadjson()
-    return output, plan
+    return output, plan, rows
   except:
     cursor.execute('ROLLBACK')
     connection.commit()
-    return False, False
+    return False, False, False
     
 
 def display_blocks(relations ,crsr):
   
   '''Return the blocks accessed by the query plan
-     Input: '''
+     Input: Name of the relations, Query cursor'''
   
   print("Displaying blocks")
   relation_details={}
@@ -244,12 +249,12 @@ def display_blocks(relations ,crsr):
               block_content[block].append(tuple)
       
           relation_details[relation]=block_content
-  for relation,content in relation_details.items():
-      for block,tuples in content.items():
-          # print(f'BLOCK {block}')
-          for tuple in tuples: 
-              # print (tuple)
-              pass
+  # for relation,content in relation_details.items():
+  #     for block,tuples in content.items():
+  #         # print(f'BLOCK {block}')
+  #         for tuple in tuples: 
+  #             # print (tuple)
+  #             pass
   return relation_details
 
 def get_parent(json_tree):
