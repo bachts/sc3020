@@ -152,54 +152,96 @@ def process_query():
   query = entry.get('1.0', tk.END)
   # print(query)
   relations = e.extract_original_tables(query)
-  print(relations)
+  # print(relations)
   if not relations:
-    print('wtf?')
     query_error()
     return
-  tuples, tree_dict, rows = e.process(cursor, query)
-  tuples_locations = e.get_unique_tuples(tuples, relations)
-  relation_details = e.display_blocks(relations, cursor)
+  tuples, tree_dict = e.process(cursor, query)
   if not tuples or not tree_dict:
     print(tuples, tree_dict)
     query_error()
     return
+  tuple_locations = e.get_unique_tuples(tuples, relations)
+  # print(tuple_locations)
+  relation_details = e.display_blocks(relations, cursor)
+  
   
   populate_query_viz(tree_dict)
-  populate_tuples(relation_details)
+  populate_tuples(relation_details, tuple_locations)
   # print(relation_details)
   # print(tuples, tree)
 
-def populate_tuples(relation_details):
+def populate_tuples(relation_details, tuple_locations):
   
   print('Populating Tuples')
   import tksheet
   tabs = ttk.Notebook(tuple_output)
   for relation, content in relation_details.items():
+    
+    # Create a tab for each relations
     sub_tabs = ttk.Notebook(tabs)
     tabs.add(sub_tabs, text=relation)
-    if len(content.items()) > 10: # Sample 10 blocks only
-      for block, tuples in random.sample(content.items(), 10):
+    
+    print(relation)
+    # Get the blocks accessed for that relation
+    blocks_accessed = {}
+    # print(tuple_locations.keys())
+    for row in tuple_locations[relation]:
+      # print(row)
+      if row[0] not in blocks_accessed.keys():
+        blocks_accessed[row[0]] = 1
+    # print(blocks_accessed[3698])
+    if len(blocks_accessed.keys()) > 5:
+      for block in random.sample(list(blocks_accessed.keys()), 5):
+        # print(block)
+        tuples = content[block]
         block_tab = ttk.Notebook(sub_tabs)
-        sub_tabs.add(block_tab, text=f'BLOCK {block}')       
+        sub_tabs.add(block_tab, text=f'ACCESSED BLOCK {block}')       
         headers = ['ctid']
         for i in tables[relation]:
           headers.append(i[0])
-        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers)
+        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, frame_bg='yellow')
         scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
         scrollbar.pack(fill='y', side='top') 
         sheet.pack(fill='both')
     else:
-      for block, tuples in content.items():
+      for block in blocks_accessed.keys(): 
+        # print(block)
+        tuples = content[block]
         block_tab = ttk.Notebook(sub_tabs)
-        sub_tabs.add(block_tab, text=f'BLOCK {block}')
+        sub_tabs.add(block_tab, text=f'ACCESSED BLOCK {block}')
         headers = ['ctid']
         for i in tables[relation]:
           headers.append(i[0])
-        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers)
+        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, frame_bg='yellow')
         scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
         scrollbar.pack(fill='y', side='top') 
         sheet.pack(fill='both')
+    
+    if len(content.items()) > 10: # Sample 10 blocks only
+      for block, tuples in random.sample(content.items(), 10):
+        if block not in blocks_accessed.keys():
+          block_tab = ttk.Notebook(sub_tabs)
+          sub_tabs.add(block_tab, text=f'UNACCESSED BLOCK {block}')       
+          headers = ['ctid']
+          for i in tables[relation]:
+            headers.append(i[0])
+          sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers)
+          scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
+          scrollbar.pack(fill='y', side='top') 
+          sheet.pack(fill='both')
+    else:
+      for block, tuples in zip(content.keys(), content.values()): 
+        if block not in list(blocks_accessed.keys()): 
+          block_tab = ttk.Notebook(sub_tabs)
+          sub_tabs.add(block_tab, text=f'UNACCSSED BLOCK {block}')
+          headers = ['ctid']
+          for i in tables[relation]:
+            headers.append(i[0])
+          sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, frame_bg='yellow')
+          scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
+          scrollbar.pack(fill='y', side='top') 
+          sheet.pack(fill='both')
         
   print('Done')
   tabs.place(x=0, y=0, width=800)

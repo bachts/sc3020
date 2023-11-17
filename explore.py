@@ -91,24 +91,26 @@ def remove_linebreaks_and_extra_spaces(input_string):
 
 def get_unique_tuples(rows,relations):
 
-  '''Get the locations for the tuples accessed'''
+  '''Get the locations for the tuples accessed
+     Rows: The output of a ctid_query
+     Relations: Relations called by the query'''
 
   print("Collecting tuples")
   import ast
   tuple_locations = OrderedDict((relation, []) for relation in relations)
   # print(rows)
-  print(tuple_locations)
+  # print(tuple_locations)
   for row in rows:
       for i, relation in enumerate(relations):
-          print(row[i])
+          # print(row[i])
           tuple_in_row = list(ast.literal_eval(row[i]))
-          print(tuple_in_row)
+          # print(tuple_in_row)
           tuple_locations[relation].append(tuple_in_row)
           # values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
       
-  for relation in relations:
-      print(relation)
-      print(tuple_locations[relation])
+  # for relation in relations:
+  #     print(relation)
+  #     print(tuple_locations[relation])
   return tuple_locations
       
 def connect():
@@ -212,14 +214,14 @@ def process(cursor, query):
     cursor.execute(ctid_query(query)[0])
     output = cursor.fetchall()
     cursor.execute(query)
-    rows = cursor.fetchall()
+    # rows = cursor.fetchall()
     pretty_plan = qep_tree(cursor, query)
     plan = loadjson()
-    return output, plan, rows
+    return output, plan
   except:
     cursor.execute('ROLLBACK')
     connection.commit()
-    return False, False, False
+    return False, False
     
 
 def display_blocks(relations ,crsr):
