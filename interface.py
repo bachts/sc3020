@@ -126,7 +126,6 @@ def start():
   input_query.place(x=0, y=500)
   tuple_output.place(x=0, y=700)
   
-  
   global diagram
   diagram = ttk.Treeview(query_viz)
   diagram.heading('#0', text='Visualization of the query')
@@ -136,7 +135,7 @@ def start():
   global entry 
   entry_text = ttk.Label(input_query, text='Your SQL query here:')
   entry = tk.Text(input_query)
-  submit = ttk.Button(input_query, text='SUBMIT \n QUERY',command=partial(process_query))
+  submit = ttk.Button(input_query, text='SUBMIT \n QUERY', command=partial(process_query))
 
   entry_text.place(x=0, y=0, height=20)
   entry.place(x=0, y=20, height=180, width=600)
@@ -151,12 +150,12 @@ def process_query():
   '''Process a query and update the UI accordingly'''
   query = entry.get('1.0', tk.END)
   # print(query)
-  relations = e.extract_original_tables(query)
-  # print(relations)
-  if not relations:
-    query_error()
-    return
-  tuples, tree_dict = e.process(cursor, query)
+  # relations = e.extract_original_tables(query)
+  # # print(relations)
+  # if not relations:
+  #   query_error()
+  #   return
+  tuples, tree_dict, relations = e.process(cursor, query)
   if not tuples or not tree_dict:
     print(tuples, tree_dict)
     query_error()
@@ -182,10 +181,9 @@ def populate_tuples(relation_details, tuple_locations):
     sub_tabs = ttk.Notebook(tabs)
     tabs.add(sub_tabs, text=relation)
     
-    print(relation)
     # Get the blocks accessed for that relation
     blocks_accessed = {}
-    # print(tuple_locations.keys())
+    print(tuple_locations[relation])
     for row in tuple_locations[relation]:
       # print(row)
       if row[0] not in blocks_accessed.keys():
@@ -193,30 +191,32 @@ def populate_tuples(relation_details, tuple_locations):
     # print(blocks_accessed[3698])
     if len(blocks_accessed.keys()) > 5:
       for block in random.sample(list(blocks_accessed.keys()), 5):
-        # print(block)
         tuples = content[block]
         block_tab = ttk.Notebook(sub_tabs)
         sub_tabs.add(block_tab, text=f'ACCESSED BLOCK {block}')       
         headers = ['ctid']
         for i in tables[relation]:
           headers.append(i[0])
-        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, frame_bg='yellow')
-        scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
-        scrollbar.pack(fill='y', side='top') 
+        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
+        # scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
+        # scrollbar.pack(fill='y', side='top') 
+        # sheet.place(x=0, y=0)
+          
         sheet.pack(fill='both')
+
     else:
       for block in blocks_accessed.keys(): 
-        # print(block)
         tuples = content[block]
         block_tab = ttk.Notebook(sub_tabs)
         sub_tabs.add(block_tab, text=f'ACCESSED BLOCK {block}')
         headers = ['ctid']
         for i in tables[relation]:
           headers.append(i[0])
-        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, frame_bg='yellow')
-        scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
-        scrollbar.pack(fill='y', side='top') 
+        sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
+        # scrollbar = ttk.Scrollbar(block_tab, command=block_tab.yview, orient='horizontal')
+        # scrollbar.pack(fill='y', side='top') 
         sheet.pack(fill='both')
+        # sheet.place(x=0, y=0, height=300, width=800)
     
     if len(content.items()) > 10: # Sample 10 blocks only
       for block, tuples in random.sample(content.items(), 10):
@@ -226,10 +226,11 @@ def populate_tuples(relation_details, tuple_locations):
           headers = ['ctid']
           for i in tables[relation]:
             headers.append(i[0])
-          sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers)
-          scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
-          scrollbar.pack(fill='y', side='top') 
+          sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
+          # scrollbar = ttk.Scrollbar(block_tab, command=block_tab.yview, orient='horizontal')
+          # scrollbar.pack(fill='y', side='top') 
           sheet.pack(fill='both')
+          # sheet.place(x=0, y=0, height=300, width=800)
     else:
       for block, tuples in zip(content.keys(), content.values()): 
         if block not in list(blocks_accessed.keys()): 
@@ -238,10 +239,11 @@ def populate_tuples(relation_details, tuple_locations):
           headers = ['ctid']
           for i in tables[relation]:
             headers.append(i[0])
-          sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, frame_bg='yellow')
-          scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
-          scrollbar.pack(fill='y', side='top') 
+          sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
+          # scrollbar = ttk.Scrollbar(block_tab, command=block_tab.yview, orient='horizontal')
+          # scrollbar.pack(fill='y', side='top') 
           sheet.pack(fill='both')
+          # sheet.place(x=0, y=0, height=300, width=800)
         
   print('Done')
   tabs.place(x=0, y=0, width=800)

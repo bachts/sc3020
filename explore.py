@@ -89,7 +89,7 @@ def remove_linebreaks_and_extra_spaces(input_string):
     return result
 
 
-def get_unique_tuples(rows,relations):
+def get_unique_tuples(rows, relations):
 
   '''Get the locations for the tuples accessed
      Rows: The output of a ctid_query
@@ -209,19 +209,21 @@ def process(cursor, query):
   
   # print(ctid_query(query)[0])
   # cursor.execute(ctid_query(query)[0])
-
+  # modified_query, relations = ctid_query(query)
+  # print(modified_query)
   try:
-    cursor.execute(ctid_query(query)[0])
+    modified_query, relations = ctid_query(query)
+    cursor.execute(modified_query)
     output = cursor.fetchall()
-    cursor.execute(query)
+    # cursor.execute(query)
     # rows = cursor.fetchall()
     pretty_plan = qep_tree(cursor, query)
     plan = loadjson()
-    return output, plan
+    return output, plan, relations
   except:
     cursor.execute('ROLLBACK')
     connection.commit()
-    return False, False
+    return False, False, False
     
 
 def display_blocks(relations ,crsr):
