@@ -156,7 +156,8 @@ def process_query():
   #   query_error()
   #   return
   tuples, tree_dict, relations = e.process(cursor, query)
-  if not tuples or not tree_dict:
+  
+  if tuples=='wrong':
     print(tuples, tree_dict)
     query_error()
     return
@@ -187,63 +188,64 @@ def populate_tuples(relation_details, tuple_locations):
     for row in tuple_locations[relation]:
       # print(row)
       if row[0] not in blocks_accessed.keys():
-        blocks_accessed[row[0]] = 1
+        blocks_accessed[row[0]] = []
+      blocks_accessed[row[0]].append(row[1])
     # print(blocks_accessed[3698])
     if len(blocks_accessed.keys()) > 5:
       for block in random.sample(list(blocks_accessed.keys()), 5):
         tuples = content[block]
+        tuples_number = blocks_accessed[block]
+        min_num = tuples[0][0]
+        for i in range(len(tuples_number)):
+          tuples_number[i] -= min_num
         block_tab = ttk.Notebook(sub_tabs)
         sub_tabs.add(block_tab, text=f'ACC{block}')       
-        headers = ['ctid']
+        headers = ['tuple_number']
         for i in tables[relation]:
           headers.append(i[0])
         sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
-        # scrollbar = ttk.Scrollbar(block_tab, command=sheet.xscroll, orient='horizontal')
-        # scrollbar.pack(fill='y', side='top') 
-        # sheet.place(x=0, y=0)
-          
+        sheet.highlight_rows(rows = tuples_number, bg='yellow')  
+
         sheet.pack(fill='both')
 
     else:
       for block in blocks_accessed.keys(): 
         tuples = content[block]
+        tuples_number = blocks_accessed[block]
+        min_num = tuples[0][0]
+
+        for i in range(len(tuples_number)):
+          tuples_number[i] -= min_num
+        print(tuples_number)
         block_tab = ttk.Notebook(sub_tabs)
         sub_tabs.add(block_tab, text=f'ACC{block}')
-        headers = ['ctid']
+        headers = ['tuple_number']
         for i in tables[relation]:
           headers.append(i[0])
         sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
-        # scrollbar = ttk.Scrollbar(block_tab, command=block_tab.yview, orient='horizontal')
-        # scrollbar.pack(fill='y', side='top') 
         sheet.pack(fill='both')
-        # sheet.place(x=0, y=0, height=300, width=800)
+        sheet.highlight_rows(rows = tuples_number, bg='yellow')  
     
-    if len(content.items()) > 5: # Sample 5 blocks only
+    if len(content.items()) > 5 : # Sample 5 blocks only
       for block, tuples in random.sample(content.items(), 5):
         if block not in blocks_accessed.keys():
           block_tab = ttk.Notebook(sub_tabs)
           sub_tabs.add(block_tab, text=f'UNAC{block}')       
-          headers = ['ctid']
+          headers = ['tuple_number']
           for i in tables[relation]:
             headers.append(i[0])
           sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
-          # scrollbar = ttk.Scrollbar(block_tab, command=block_tab.yview, orient='horizontal')
-          # scrollbar.pack(fill='y', side='top') 
           sheet.pack(fill='both')
-          # sheet.place(x=0, y=0, height=300, width=800)
     else:
       for block, tuples in zip(content.keys(), content.values()): 
         if block not in list(blocks_accessed.keys()): 
           block_tab = ttk.Notebook(sub_tabs)
           sub_tabs.add(block_tab, text=f'UNAC{block}')
-          headers = ['ctid']
+          headers = ['tuple_number']
           for i in tables[relation]:
             headers.append(i[0])
           sheet = tksheet.Sheet(block_tab, data=tuples, headers=headers, width=200, height=200)
-          # scrollbar = ttk.Scrollbar(block_tab, command=block_tab.yview, orient='horizontal')
-          # scrollbar.pack(fill='y', side='top') 
           sheet.pack(fill='both')
-          # sheet.place(x=0, y=0, height=300, width=800)
         
   print('Done')
   tabs.place(x=0, y=0, width=800)

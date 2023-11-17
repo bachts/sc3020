@@ -89,7 +89,7 @@ def remove_linebreaks_and_extra_spaces(input_string):
     return result
 
 
-def get_unique_tuples(rows, relations):
+def get_unique_tuples(rows,relations):
 
   '''Get the locations for the tuples accessed
      Rows: The output of a ctid_query
@@ -98,19 +98,24 @@ def get_unique_tuples(rows, relations):
   print("Collecting tuples")
   import ast
   tuple_locations = OrderedDict((relation, []) for relation in relations)
-  # print(rows)
-  # print(tuple_locations)
+  tuple_set=OrderedDict((relation, set()) for relation in relations)
   for row in rows:
       for i, relation in enumerate(relations):
-          # print(row[i])
-          tuple_in_row = list(ast.literal_eval(row[i]))
-          # print(tuple_in_row)
-          tuple_locations[relation].append(tuple_in_row)
-          # values = list(map(int,[value.strip('"()"') for value in data.strip("'{}'").split(',')]))
-      
-  # for relation in relations:
-  #     print(relation)
-  #     print(tuple_locations[relation])
+          if('{' in row[i] or '}' in row[i]):
+            tuple_in_row = list(eval(row[i]))
+
+            tuple_in_row = list(ast.literal_eval(s) for s in tuple_in_row)
+
+            for tuple in tuple_in_row:
+              if tuple not in tuple_set[relation]:
+                tuple_locations[relation].append(tuple)
+                tuple_set[relation].add(tuple)
+          else:
+            if row[i] not in tuple_set[relation]:
+              tuple_locations[relation].append(eval(row[i]))
+              tuple_set[relation].add(row[i])
+
+
   return tuple_locations
       
 def connect():
@@ -199,7 +204,7 @@ def qep_tree(cursor, query):
 
 def loadjson():
   with open('queryplan.json') as json_file:
-        data = json.load(json_file)
+    data = json.load(json_file)
   dict_plan_inner = data
   return dict_plan_inner
   
@@ -207,9 +212,6 @@ def process(cursor, query):
   
   '''Process a query and return the output, with block id and access'''
   
-  # print(ctid_query(query)[0])
-  # cursor.execute(ctid_query(query)[0])
-
   try:
     modified_query, relations = ctid_query(query)
     cursor.execute(modified_query)
@@ -218,11 +220,12 @@ def process(cursor, query):
     # rows = cursor.fetchall()
     pretty_plan = qep_tree(cursor, query)
     plan = loadjson()
+    print('processing')
     return output, plan, relations
   except:
     cursor.execute('ROLLBACK')
     connection.commit()
-    return False, False,
+    return 'wrong', 'wrong', 'wrong'
     
 
 def display_blocks(relations ,crsr):
