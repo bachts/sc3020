@@ -1,4 +1,4 @@
-# sc3020
+# SC3020
 ## Project 2 for NTU's database system principles
 
 This is a tutorial on how to execute the project. 
