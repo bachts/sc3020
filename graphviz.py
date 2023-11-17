@@ -10,6 +10,7 @@ def open_web():
   data = data['Plan']
   
   
+  # Saving the JSON file in an online repository
   key = '$2a$10$xfz3Fvi9U71ZpHDC1fBZqe8AueMwan9A5NhKIg0L7SpgIX6ojqZ0W'
   url = 'https://api.jsonbin.io/v3/b'
   headers = {
@@ -28,5 +29,6 @@ def open_web():
   print(query['metadata'])
   read_url = f"https://api.jsonbin.io/v3/b/{query['metadata']['id']}"
   
+  # Loading the JSON file onto jsoncrack.com
   url = f'https://jsoncrack.com/editor?json={read_url}'
   webbrowser.open(url)
