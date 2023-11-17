@@ -1,0 +1,12 @@
+certifi==2023.7.22
+charset-normalizer==3.3.2
+idna==3.4
+networkx==3.1
+Pillow==10.1.0
+psycopg2==2.9.9
+requests==2.31.0
+sql_metadata==2.10.0
+sqlparse==0.4.4
+tksheet==6.2.9
+ttkthemes==3.2.2
+urllib3==2.1.0
